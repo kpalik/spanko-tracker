@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
-import { Moon, Coffee, Activity, Save, Loader2, Calendar as CalendarIcon, ChevronDown, ChevronUp } from 'lucide-react'
+import { Moon, Coffee, Activity, Save, Loader2, Calendar as CalendarIcon, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import Calendar from './Calendar'
 
 // --- Helper Components ---
@@ -49,6 +49,16 @@ export default function SleepEntryForm() {
 
     // Form State
     const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+
+    const handlePrevDay = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        setDate(prev => new Date(new Date(prev).setDate(new Date(prev).getDate() - 1)).toISOString().split('T')[0])
+    }
+
+    const handleNextDay = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        setDate(prev => new Date(new Date(prev).setDate(new Date(prev).getDate() + 1)).toISOString().split('T')[0])
+    }
 
     // Sleep Params
     const [bedTime, setBedTime] = useState('')
@@ -201,7 +211,28 @@ export default function SleepEntryForm() {
                             <p className="text-white font-bold text-lg">{date}</p>
                         </div>
                     </div>
-                    {showCalendar ? <ChevronUp className="w-5 h-5 text-zinc-500" /> : <ChevronDown className="w-5 h-5 text-zinc-500" />}
+
+                    <div className="flex items-center gap-2">
+                        {/* Prev Day Arrow */}
+                        <button
+                            onClick={handlePrevDay}
+                            className="p-2 hover:bg-zinc-700 rounded-full text-zinc-400 hover:text-white transition-colors"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+
+                        {/* Next Day Arrow */}
+                        <button
+                            onClick={handleNextDay}
+                            className="p-2 hover:bg-zinc-700 rounded-full text-zinc-400 hover:text-white transition-colors"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+
+                        <div className="w-px h-6 bg-zinc-700 mx-1"></div>
+
+                        {showCalendar ? <ChevronUp className="w-5 h-5 text-zinc-500" /> : <ChevronDown className="w-5 h-5 text-zinc-500" />}
+                    </div>
                 </div>
 
                 {showCalendar && (
@@ -210,7 +241,7 @@ export default function SleepEntryForm() {
                             selectedDate={date}
                             onDateSelect={(d) => {
                                 setDate(d)
-                                // setTimeout(() => setShowCalendar(false), 200) // Optional auto-close
+                                setShowCalendar(false) // Auto-close
                             }}
                         />
                     </div>
