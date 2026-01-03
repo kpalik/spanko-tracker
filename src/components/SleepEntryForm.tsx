@@ -50,13 +50,38 @@ export default function SleepEntryForm() {
     // Form State
     const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 
+    // --- Helper for clearing form ---
+    const resetForm = () => {
+        setBedTime('')
+        setLightsOutDelay('')
+        setSleepLatency('')
+        setAwakeningsCount('')
+        setAwakeningsMinutes('')
+        setWakeUpDelay('')
+        setGetUpTime('')
+
+        setNaps('')
+        setCaffeine('')
+        setActivity('')
+        setAlcohol('')
+        setMeds('')
+
+        setSleepQuality(0)
+        setMorningFeeling(0)
+        setYesterdayFeeling(0)
+    }
+
     const handlePrevDay = (e: React.MouseEvent) => {
+        e.preventDefault()
         e.stopPropagation()
+        resetForm() // Clear immediately as requested
         setDate(prev => new Date(new Date(prev).setDate(new Date(prev).getDate() - 1)).toISOString().split('T')[0])
     }
 
     const handleNextDay = (e: React.MouseEvent) => {
+        e.preventDefault()
         e.stopPropagation()
+        resetForm() // Clear immediately as requested
         setDate(prev => new Date(new Date(prev).setDate(new Date(prev).getDate() + 1)).toISOString().split('T')[0])
     }
 
@@ -85,6 +110,8 @@ export default function SleepEntryForm() {
     useEffect(() => {
         if (!user || !date) return
 
+        let active = true
+
         const loadData = async () => {
             setFetching(true)
             setMessage(null)
@@ -95,6 +122,8 @@ export default function SleepEntryForm() {
                     .eq('user_id', user.id)
                     .eq('date', date)
                     .maybeSingle()
+
+                if (!active) return
 
                 if (error) throw error
 
@@ -122,34 +151,26 @@ export default function SleepEntryForm() {
                         setMessage({ type: 'success', text: 'Załadowano dane z tego dnia.' })
                     }
                 } else {
-                    // Clear Form
-                    setBedTime('')
-                    setLightsOutDelay('')
-                    setSleepLatency('')
-                    setAwakeningsCount('')
-                    setAwakeningsMinutes('')
-                    setWakeUpDelay('')
-                    setGetUpTime('')
-
-                    setNaps('')
-                    setCaffeine('')
-                    setActivity('')
-                    setAlcohol('')
-                    setMeds('')
-
-                    setSleepQuality(0)
-                    setMorningFeeling(0)
-                    setYesterdayFeeling(0)
+                    // Form is already cleared by handlePrev/Next, but we ensure it here too in case of direct date load
+                    if (!showCalendar) resetForm()
                 }
             } catch (err: any) {
-                console.error('Error fetching data:', err)
-                setMessage({ type: 'error', text: 'Błąd pobierania danych.' })
+                if (active) {
+                    console.error('Error fetching data:', err)
+                    setMessage({ type: 'error', text: 'Błąd pobierania danych.' })
+                }
             } finally {
-                setFetching(false)
+                if (active) {
+                    setFetching(false)
+                }
             }
         }
 
         loadData()
+
+        return () => {
+            active = false
+        }
     }, [date, user]) // Removed showCalendar dep
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -215,6 +236,7 @@ export default function SleepEntryForm() {
                     <div className="flex items-center gap-2">
                         {/* Prev Day Arrow */}
                         <button
+                            type="button"
                             onClick={handlePrevDay}
                             className="p-2 hover:bg-zinc-700 rounded-full text-zinc-400 hover:text-white transition-colors"
                         >
@@ -223,6 +245,7 @@ export default function SleepEntryForm() {
 
                         {/* Next Day Arrow */}
                         <button
+                            type="button"
                             onClick={handleNextDay}
                             className="p-2 hover:bg-zinc-700 rounded-full text-zinc-400 hover:text-white transition-colors"
                         >
